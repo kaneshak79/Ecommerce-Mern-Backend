@@ -18,35 +18,7 @@ export const updateStore = async (req, res) => {
 };
 
 // Seller Orders
-// export const getSellerOrders = async (req, res) => {
-//   const orders = await Order.find({ seller: req.user._id }).populate("products.product");
-//   res.json(orders);
-// };
-// export const getSellerOrders = async (req, res) => {
-//   try {
-//     // 1️⃣ Get all orders
-//     const orders = await Order.find().populate("products.product").populate("buyer");
 
-//     // 2️⃣ Filter orders to include only products belonging to this seller
-//     const sellerOrders = orders
-//       .map(order => {
-//         const sellerProducts = order.products.filter(
-//           item => item.product.seller.toString() === req.user._id.toString()
-//         );
-//         if (sellerProducts.length > 0) {
-//           return {
-//             ...order.toObject(),
-//             products: sellerProducts
-//           };
-//         } else return null;
-//       })
-//       .filter(Boolean); // remove nulls
-
-//     res.json(sellerOrders);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 export const getSellerOrders = async (req, res) => {
   const orders = await Order.find().populate("products.product").populate("buyer");
@@ -70,11 +42,7 @@ export const getSellerOrders = async (req, res) => {
 };
 
 // Sales Report
-// export const salesReport = async (req, res) => {
-//   const orders = await Order.find({ seller: req.user._id });
-//   const totalSales = orders.reduce((acc, order) => acc + order.totalAmount, 0);
-//   res.json({ totalSales, totalOrders: orders.length, orders });
-// };
+
 
 export const getSalesReport = async (req, res) => {
   const orders = await Order.find().populate("products.product");
