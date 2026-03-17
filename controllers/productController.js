@@ -1,15 +1,32 @@
 import Product from "../models/Product.js";
 
 // Add Product (Seller only)
+// export const addProduct = async (req, res) => {
+//   const { title, description, price, quantity, category, images } = req.body;
+//   const product = await Product.create({
+//     seller: req.user._id,
+//     title, description, price, quantity, category, images
+//   });
+//   res.status(201).json(product);
+// };
 export const addProduct = async (req, res) => {
-  const { title, description, price, quantity, category, images } = req.body;
-  const product = await Product.create({
-    seller: req.user._id,
-    title, description, price, quantity, category, images
-  });
-  res.status(201).json(product);
-};
+  try {
+    const { title, description, price, image } = req.body;
 
+    const product = await Product.create({
+      title,
+      description,
+      price,
+      images: [image], // your schema uses images[]
+      seller: req.user._id, // 🔥 CRITICAL FIX
+    });
+
+    res.status(201).json(product);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 // Get All Products
 export const getAllProducts = async (req, res) => {
   const products = await Product.find();
