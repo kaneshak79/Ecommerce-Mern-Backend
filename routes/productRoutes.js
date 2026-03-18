@@ -5,6 +5,7 @@ import {
 } from "../controllers/productController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+import { upload } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -15,7 +16,8 @@ router.get("/filter/price", filterByPrice);
 router.get("/filter/combined", filterProducts);
 router.get("/:id", getProductById);
 
-router.post("/", protect, authorizeRoles("seller"), addProduct);
+// router.post("/", protect, authorizeRoles("seller"), addProduct);
+router.post("/create", protect,authorizeRoles("seller"), upload.single("image"), addProduct);
 router.put("/:id", protect, authorizeRoles("seller"), updateProduct);
 router.delete("/:id", protect, authorizeRoles("seller"), deleteProduct);
 

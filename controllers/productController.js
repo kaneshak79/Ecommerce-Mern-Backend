@@ -9,20 +9,43 @@ import Product from "../models/Product.js";
 //   });
 //   res.status(201).json(product);
 // };
+// export const addProduct = async (req, res) => {
+//   try {
+//     const { title, description, price, image } = req.body;
+
+//     const product = await Product.create({
+//       title,
+//       description,
+//       price,
+//       images: [image], // your schema uses images[]
+//       seller: req.user._id, // 🔥 CRITICAL FIX
+//     });
+
+//     res.status(201).json(product);
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 export const addProduct = async (req, res) => {
   try {
-    const { title, description, price, image } = req.body;
+    const { title, price, description } = req.body;
 
     const product = await Product.create({
       title,
-      description,
       price,
-      images: [image], // your schema uses images[]
-      seller: req.user._id, // 🔥 CRITICAL FIX
+      description,
+      seller: req.user._id,
+      images: req.file.path // ✅ IMPORTANT
+    });
+
+    // ✅ UPDATE PRODUCT COUNT
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { totalProducts: 1 }
     });
 
     res.status(201).json(product);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
