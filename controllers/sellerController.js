@@ -509,33 +509,204 @@ import User from "../models/User.js";
 // ----------------------
 // Seller Dashboard
 // ----------------------
+// export const getSellerDashboard = async (req, res) => {
+//   try {
+//     const sellerId = req.user._id;
+
+//     const productsCount = await Product.countDocuments({ seller: sellerId });
+//     const orders = await Order.find({ "products.seller": sellerId });
+
+//     let totalRevenue = 0;
+//     const orderIds = new Set();
+
+//     orders.forEach(order => {
+//       order.products.forEach(item => {
+//         if (item.seller.toString() === sellerId.toString()) {
+//           totalRevenue += item.price * item.quantity;
+//           orderIds.add(order._id.toString());
+//         }
+//       });
+//     });
+
+//     res.json({
+//       products: productsCount,
+//       orders: orderIds.size,
+//       revenue: totalRevenue
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Error fetching dashboard" });
+//   }
+// };
+
+// export const getSellerDashboard = async (req, res) => {
+//   try {
+//     const sellerId = req.user._id;
+
+//     // Count products created by seller
+//     const productsCount = await Product.countDocuments({ seller: sellerId });
+
+//     // Get all orders that include seller's products
+//     const orders = await Order.find({ "products.seller": sellerId })
+//       .sort({ createdAt: -1 })
+//       .limit(50); // limit to latest 50 orders for performance
+
+//     let totalRevenue = 0;
+//     const orderIds = new Set();
+
+//     // Prepare recentOrders array
+//     const recentOrders = [];
+
+//     // Prepare salesByDate map
+//     const salesMap = {}; // { '2026-03-19': { orders: 2, revenue: 100 } }
+
+//     orders.forEach(order => {
+//       let sellerOrderTotal = 0;
+//       let sellerProductsInOrder = [];
+
+//       order.products.forEach(item => {
+//         if (item.seller.toString() === sellerId.toString()) {
+//           const itemTotal = item.price * item.quantity;
+//           totalRevenue += itemTotal;
+//           sellerOrderTotal += itemTotal;
+//           sellerProductsInOrder.push({
+//             productName: item.product?.title || "Unknown Product",
+//             quantity: item.quantity,
+//             price: item.price
+//           });
+//         }
+//       });
+
+//       if (sellerProductsInOrder.length > 0) {
+//         orderIds.add(order._id.toString());
+
+//         // Add to recentOrders
+//         recentOrders.push({
+//           _id: order._id,
+//           buyerName: order.buyer.name,
+//           status: order.status,
+//           date: order.createdAt.toISOString().split("T")[0],
+//           products: sellerProductsInOrder
+//         });
+
+//         // Add to salesMap by date
+//         const dateKey = order.createdAt.toISOString().split("T")[0];
+//         if (!salesMap[dateKey]) salesMap[dateKey] = { orders: 0, revenue: 0 };
+//         salesMap[dateKey].orders += 1;
+//         salesMap[dateKey].revenue += sellerOrderTotal;
+//       }
+//     });
+
+//     // Convert salesMap to array for frontend chart
+//     const salesByDate = Object.keys(salesMap)
+//       .sort() // sort by date ascending
+//       .map(date => ({
+//         date,
+//         orders: salesMap[date].orders,
+//         revenue: salesMap[date].revenue
+//       }));
+
+//     res.json({
+//       products: productsCount,
+//       orders: orderIds.size,
+//       revenue: totalRevenue,
+//       salesByDate,
+//       recentOrders
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Error fetching dashboard" });
+//   }
+// };
+
+
+// controllers/sellerController.js
+
+// import Product from "../models/Product.js";
+// import Order from "../models/Order.js";
+
 export const getSellerDashboard = async (req, res) => {
   try {
     const sellerId = req.user._id;
 
+    // 1️⃣ Count products created by this seller
     const productsCount = await Product.countDocuments({ seller: sellerId });
-    const orders = await Order.find({ "products.seller": sellerId });
+
+    // 2️⃣ Get all orders containing this seller's products, populate product title
+    const orders = await Order.find({ "products.seller": sellerId })
+      .populate("products.product", "title") // populate product title
+      .sort({ createdAt: -1 })
+      .limit(50); // latest 50 orders for dashboard
 
     let totalRevenue = 0;
     const orderIds = new Set();
 
+    // 3️⃣ Prepare recentOrders array
+    const recentOrders = [];
+
+    // 4️⃣ Prepare salesByDate map
+    const salesMap = {}; // { '2026-03-19': { orders: 2, revenue: 100 } }
+
     orders.forEach(order => {
+      let sellerOrderTotal = 0;
+      let sellerProductsInOrder = [];
+
       order.products.forEach(item => {
         if (item.seller.toString() === sellerId.toString()) {
-          totalRevenue += item.price * item.quantity;
-          orderIds.add(order._id.toString());
+          const itemTotal = item.price * item.quantity;
+          totalRevenue += itemTotal;
+          sellerOrderTotal += itemTotal;
+
+          sellerProductsInOrder.push({
+            productName: item.product?.title || "Unknown Product",
+            quantity: item.quantity,
+            price: item.price
+          });
         }
       });
+
+      if (sellerProductsInOrder.length > 0) {
+        orderIds.add(order._id.toString());
+
+        // Add to recentOrders
+        recentOrders.push({
+          _id: order._id,
+          buyerName: order.buyer.name,
+          status: order.status,
+          date: order.createdAt.toISOString().split("T")[0],
+          products: sellerProductsInOrder
+        });
+
+        // Add to salesMap by date
+        const dateKey = order.createdAt.toISOString().split("T")[0];
+        if (!salesMap[dateKey]) salesMap[dateKey] = { orders: 0, revenue: 0 };
+        salesMap[dateKey].orders += 1;
+        salesMap[dateKey].revenue += sellerOrderTotal;
+      }
     });
 
+    // Convert salesMap to sorted array for frontend chart
+    const salesByDate = Object.keys(salesMap)
+      .sort()
+      .map(date => ({
+        date,
+        orders: salesMap[date].orders,
+        revenue: salesMap[date].revenue
+      }));
+
+    // 5️⃣ Return dashboard JSON
     res.json({
       products: productsCount,
       orders: orderIds.size,
-      revenue: totalRevenue
+      revenue: totalRevenue,
+      salesByDate,
+      recentOrders
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching seller dashboard:", err);
     res.status(500).json({ message: "Error fetching dashboard" });
   }
 };
@@ -632,27 +803,108 @@ export const getSellerProducts = async (req, res) => {
 // ----------------------
 // Get Seller Orders
 // ----------------------
+// export const getSellerOrders = async (req, res) => {
+//   try {
+//     const sellerId = req.user._id;
+//     const orders = await Order.find({ "products.seller": sellerId }).populate("buyer", "name email");
+
+//     const sellerOrders = orders.map(order => {
+//       const filteredProducts = order.products.filter(item => item.seller.toString() === sellerId.toString());
+//       return {
+//         _id: order._id,
+//         buyer: order.buyer,
+//         products: filteredProducts,
+//         totalAmount: filteredProducts.reduce((sum, p) => sum + p.price * p.quantity, 0),
+//         shippingAddress: order.shippingAddress,
+//         status: order.status,
+//         createdAt: order.createdAt
+//       };
+//     });
+
+//     res.json(sellerOrders);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Error fetching seller orders" });
+//   }
+// };
+
+// controllers/orderController.js
+// import Order from "../models/Order.js";
+
 export const getSellerOrders = async (req, res) => {
   try {
     const sellerId = req.user._id;
-    const orders = await Order.find({ "products.seller": sellerId }).populate("buyer", "name email");
 
-    const sellerOrders = orders.map(order => {
-      const filteredProducts = order.products.filter(item => item.seller.toString() === sellerId.toString());
+    // Find orders that have at least one product by this seller
+    const orders = await Order.find({ "products.seller": sellerId })
+      .populate({
+        path: "products.product",        // Populate the product object
+        select: "title price images",    // Only fetch these fields
+        match: { _id: { $ne: null } }   // Exclude deleted products
+      })
+      .populate("buyer", "name email")   // Include buyer info
+      .sort({ createdAt: -1 });         // Latest orders first
+
+    // Map orders to include only this seller's products
+    const filteredOrders = orders.map(order => {
+      const sellerProducts = order.products.filter(
+        item => item.seller.toString() === sellerId.toString()
+      );
+
       return {
         _id: order._id,
         buyer: order.buyer,
-        products: filteredProducts,
-        totalAmount: filteredProducts.reduce((sum, p) => sum + p.price * p.quantity, 0),
-        shippingAddress: order.shippingAddress,
         status: order.status,
-        createdAt: order.createdAt
+        date: order.createdAt,
+        products: sellerProducts,
+        totalAmount: sellerProducts.reduce((sum, i) => sum + i.price * i.quantity, 0),
+        shippingAddress: order.shippingAddress
       };
     });
 
-    res.json(sellerOrders);
+    res.json(filteredOrders);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error fetching seller orders" });
+    console.error("Get Seller Orders Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// controllers/sellerController.js
+// import Order from "../models/Order.js";
+
+// Update order status for a specific product of the logged-in seller
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const sellerId = req.user._id; // logged-in seller
+    const { orderId, productId } = req.params;
+    const { status } = req.body; // new status e.g., "pending", "shipped", "delivered"
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Find the product in this order that belongs to this seller
+    const productItem = order.products.find(
+      (p) => p._id.toString() === productId && p.seller.toString() === sellerId.toString()
+    );
+
+    if (!productItem) return res.status(403).json({ message: "Access denied: not your product" });
+
+    // Update status
+    productItem.status = status;
+    await order.save();
+
+    res.json({
+      message: "Product status updated successfully",
+      orderId,
+      product: {
+        _id: productItem._id,
+        productName: productItem.productName,
+        status: productItem.status,
+      },
+    });
+  } catch (err) {
+    console.error("Error updating order status:", err);
+    res.status(500).json({ message: "Error updating order status" });
   }
 };

@@ -20,6 +20,7 @@ import express from "express";
 import { protect } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/roleMiddleware.js";
 import {
+    updateOrderStatus,
   getSellerProducts,
   updateStore,
   getSellerOrders,
@@ -38,5 +39,13 @@ router.get("/orders", protect, authorizeRoles("seller"), getSellerOrders);
 router.get("/sales", protect, authorizeRoles("seller"), getSalesReport);
 
 router.get("/dashboard", protect, authorizeRoles("seller"), getSellerDashboard);
+
+// PATCH route to update status of a specific product in an order
+router.patch(
+  "/orders/:orderId/product/:productId",
+  protect,                 // must be logged in
+  authorizeRoles("seller"), // must be a seller
+  updateOrderStatus         // controller we wrote
+);
 
 export default router;
