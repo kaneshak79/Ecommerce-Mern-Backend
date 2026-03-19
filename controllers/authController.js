@@ -615,20 +615,55 @@ export const forgotPassword = async (req, res) => {
 // -----------------------------
 // Reset Password
 // -----------------------------
+// export const resetPassword = async (req, res) => {
+//   try {
+//     const resetToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+
+//     const user = await User.findOne({
+//       resetPasswordToken: resetToken,
+//       resetPasswordExpire: { $gt: Date.now() },
+//     });
+
+//     if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+//     user.password = await bcrypt.hash(req.body.password, 10);
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpire = undefined;
+//     await user.save();
+
+//     res.json({ message: "Password reset successful" });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 export const resetPassword = async (req, res) => {
   try {
-    const resetToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+    const { token } = req.params;
+    if (!token) return res.status(400).json({ message: "Invalid or expired token" });
 
+    // hash the token from URL
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // find user with matching hashed token and valid expiry
     const user = await User.findOne({
-      resetPasswordToken: resetToken,
+      resetPasswordToken: hashedToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
 
-    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+    if (!user) {
+      console.log("Token from URL:", token);
+      console.log("Hashed token:", hashedToken);
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
 
+    // hash new password
     user.password = await bcrypt.hash(req.body.password, 10);
+
+    // clear reset fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+
     await user.save();
 
     res.json({ message: "Password reset successful" });
