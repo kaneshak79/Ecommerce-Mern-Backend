@@ -452,6 +452,8 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
+    
+
     // 2️⃣ Filter valid products (skip deleted products)
     const validProducts = cart.products.filter(item => item.product != null);
     if (validProducts.length === 0) {

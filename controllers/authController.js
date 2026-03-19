@@ -565,6 +565,7 @@ export const changePassword = async (req, res) => {
 // -----------------------------
 export const forgotPassword = async (req, res) => {
   try {
+    console.log("CLIENT_URL:", process.env.CLIENT_URL);
     const { email } = req.body;
 
     const user = await User.findOne({ email });
@@ -577,8 +578,8 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // Reset URL
-    const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/resetpassword/${resetToken}`;
-
+    // const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/resetpassword/${resetToken}`;
+   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
     // Send email via Brevo API Key
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",
