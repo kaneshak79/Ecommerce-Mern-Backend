@@ -637,37 +637,42 @@ export const forgotPassword = async (req, res) => {
 //   }
 // };
 
+
+
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
+    const { password } = req.body;
+
     if (!token) return res.status(400).json({ message: "Invalid or expired token" });
+    if (!password) return res.status(400).json({ message: "Password is required" });
 
-    // hash the token from URL
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    // Trim the token to remove spaces or line breaks
+    const trimmedToken = token.trim();
 
-    // find user with matching hashed token and valid expiry
+    // Hash the token (same as stored in DB)
+    const hashedToken = crypto.createHash("sha256").update(trimmedToken).digest("hex");
+
+    // Find user with valid token and expiry
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
 
-    if (!user) {
-      console.log("Token from URL:", token);
-      console.log("Hashed token:", hashedToken);
-      return res.status(400).json({ message: "Invalid or expired token" });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
 
-    // hash new password
-    user.password = await bcrypt.hash(req.body.password, 10);
+    // Update password
+    user.password = await bcrypt.hash(password, 10);
 
-    // clear reset fields
+    // Clear reset fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
     await user.save();
 
-    res.json({ message: "Password reset successful" });
+    return res.json({ message: "Password reset successful" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Reset password error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
