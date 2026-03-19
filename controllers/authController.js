@@ -579,7 +579,7 @@ export const forgotPassword = async (req, res) => {
 
     // Reset URL
     // const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/resetpassword/${resetToken}`;
-   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+   const resetUrl = `${process.env.CLIENT_URL}/resetpassword/${resetToken}`;
     // Send email via Brevo API Key
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",
