@@ -639,6 +639,7 @@ export const forgotPassword = async (req, res) => {
 
 
 
+
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -647,27 +648,29 @@ export const resetPassword = async (req, res) => {
     if (!token) return res.status(400).json({ message: "Invalid or expired token" });
     if (!password) return res.status(400).json({ message: "Password is required" });
 
-    // Trim the token to remove spaces or line breaks
+    // Trim the token from URL
     const trimmedToken = token.trim();
 
-    // Hash the token (same as stored in DB)
+    // Hash the token the same way as in forgotPassword
     const hashedToken = crypto.createHash("sha256").update(trimmedToken).digest("hex");
 
-    // Find user with valid token and expiry
+    // Find user with matching hashed token and valid expiry
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
 
-    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+    if (!user) {
+      console.log("Token from URL:", token);
+      console.log("Trimmed token:", trimmedToken);
+      console.log("Hashed token:", hashedToken);
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
 
-    // Update password
+    // Hash new password and save
     user.password = await bcrypt.hash(password, 10);
-
-    // Clear reset fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
-
     await user.save();
 
     return res.json({ message: "Password reset successful" });
