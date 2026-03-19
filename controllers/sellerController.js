@@ -653,19 +653,34 @@ export const getSellerDashboard = async (req, res) => {
       let sellerOrderTotal = 0;
       let sellerProductsInOrder = [];
 
-      order.products.forEach(item => {
-        if (item.seller.toString() === sellerId.toString()) {
-          const itemTotal = item.price * item.quantity;
-          totalRevenue += itemTotal;
-          sellerOrderTotal += itemTotal;
+    //   order.products.forEach(item => {
+    //     if (item.seller.toString() === sellerId.toString()) {
+    //       const itemTotal = item.price * item.quantity;
+    //       totalRevenue += itemTotal;
+    //       sellerOrderTotal += itemTotal;
 
-          sellerProductsInOrder.push({
-            productName: item.product?.title || "Unknown Product",
-            quantity: item.quantity,
-            price: item.price
-          });
-        }
-      });
+    //       sellerProductsInOrder.push({
+    //         productName: item.product?.title || "Unknown Product",
+    //         quantity: item.quantity,
+    //         price: item.price
+    //       });
+    //     }
+    //   });
+    order.products.forEach(item => {
+  if (item.seller.toString() === sellerId.toString()) {
+    const itemTotal = item.price * item.quantity;
+    totalRevenue += itemTotal;
+    sellerOrderTotal += itemTotal;
+
+    sellerProductsInOrder.push({
+      _id: item._id, // ✅ REQUIRED
+      productName: item.product?.title || "Unknown Product",
+      quantity: item.quantity,
+      price: item.price,
+      status: item.status // ✅ important for frontend
+    });
+  }
+});
 
       if (sellerProductsInOrder.length > 0) {
         orderIds.add(order._id.toString());
