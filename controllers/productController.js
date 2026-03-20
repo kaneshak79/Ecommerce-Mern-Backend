@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-
+import User from "../models/User.js"; // ✅ adjust path if needed
 // Add Product (Seller only)
 // export const addProduct = async (req, res) => {
 //   const { title, description, price, quantity, category, images } = req.body;
@@ -8,7 +8,7 @@ import Product from "../models/Product.js";
 //     title, description, price, quantity, category, images
 //   });
 //   res.status(201).json(product);
-// };
+// // };
 // export const addProduct = async (req, res) => {
 //   try {
 //     const { title, description, price, image } = req.body;
@@ -28,28 +28,80 @@ import Product from "../models/Product.js";
 //   }
 // };
 
+// export const addProduct = async (req, res) => {
+//   try {
+//     const { title, price, description } = req.body;
+
+//     const product = await Product.create({
+//       title,
+//       price,
+//       description,
+//       seller: req.user._id,
+//       images: req.file.path // ✅ IMPORTANT
+//     });
+
+//     // ✅ UPDATE PRODUCT COUNT
+//     await User.findByIdAndUpdate(req.user._id, {
+//       $inc: { totalProducts: 1 }
+//     });
+
+//     res.status(201).json(product);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+// export const addProduct = async (req, res) => {
+//   try {
+//     const { title, price, description, quantity, category } = req.body;
+
+//     const product = await Product.create({
+//       title,
+//       price,
+//       description,
+//       quantity,
+//       category,
+//       seller: req.user._id,
+
+//       // ✅ FIX: handle image safely
+//       images: req.file ? req.file.path : null
+//     });
+
+//     await User.findByIdAndUpdate(req.user._id, {
+//       $inc: { totalProducts: 1 }
+//     });
+
+//     res.status(201).json(product);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 export const addProduct = async (req, res) => {
   try {
-    const { title, price, description } = req.body;
+    const { title, price, description, quantity, category, images } = req.body;
 
     const product = await Product.create({
       title,
       price,
       description,
+      quantity,
+      category,
       seller: req.user._id,
-      images: req.file.path // ✅ IMPORTANT
-    });
 
-    // ✅ UPDATE PRODUCT COUNT
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { totalProducts: 1 }
+      // ✅ take from request
+      images: images || null
     });
 
     res.status(201).json(product);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
+
+
 // Get All Products
 export const getAllProducts = async (req, res) => {
   const products = await Product.find();
