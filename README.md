@@ -3,7 +3,7 @@
 LUXORA is a full-featured, scalable E-Commerce backend system built using the MERN Stack (MongoDB, Express.js, Node.js).
 It provides secure authentication, product management, order processing, cart system, wishlist, reviews, and payment integration support.
 
-# Designed to power a modern marketplace connecting buyers and sellers seamlessly.
+Designed to power a modern marketplace connecting buyers and sellers seamlessly.
 
 # 🚀 Key Features
 # 🔐 Authentication & Authorization
