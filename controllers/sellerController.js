@@ -923,3 +923,53 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: "Error updating order status" });
   }
 };
+
+
+
+
+
+// GET /seller/products/:id
+export const getSellerProductById = async (req, res) => {
+  try {
+    const sellerId = req.user._id;
+    const product = await Product.findOne({ _id: req.params.id, seller: sellerId });
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.json(product);
+  } catch (err) {
+    console.error("Get product by ID error:", err);
+    res.status(500).json({ message: "Error fetching product" });
+  }
+};
+
+// controllers/sellerController.js
+export const updateSellerProduct = async (req, res) => {
+  try {
+    const sellerId = req.user._id;
+    const { id } = req.params;
+
+    // Find product belonging to this seller
+    const product = await Product.findOne({ _id: id, seller: sellerId });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // Update fields
+    product.title = req.body.title || product.title;
+    product.description = req.body.description || product.description;
+    product.price = req.body.price || product.price;
+
+    // Update image if uploaded
+    if (req.file) {
+      product.images = [req.file.path]; // make sure multer saves path correctly
+    }
+
+    await product.save();
+
+    res.json(product);
+  } catch (err) {
+    console.error("Update product error:", err);
+    res.status(500).json({ message: "Failed to update product" });
+  }
+};
+
+

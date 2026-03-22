@@ -25,7 +25,9 @@ import {
   updateStore,
   getSellerOrders,
   getSalesReport,
-  getSellerDashboard
+  getSellerDashboard,
+  getSellerProductById,
+  updateSellerProduct
 } from "../controllers/sellerController.js";
 
 const router = express.Router();
@@ -46,6 +48,16 @@ router.patch(
   protect,                 // must be logged in
   authorizeRoles("seller"), // must be a seller
   updateOrderStatus         // controller we wrote
+);
+
+// 🔹 Add this for single product fetch
+router.get("/products/:id", protect, authorizeRoles("seller"), getSellerProductById);
+
+router.put(
+  "/products/:id",
+  protect,
+  authorizeRoles("seller"),
+  updateSellerProduct
 );
 
 export default router;
