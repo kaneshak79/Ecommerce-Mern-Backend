@@ -10,4 +10,5 @@ router.post("/", protect, authorizeRoles("buyer"), createOrder);
 router.get("/myorders", protect, authorizeRoles("buyer"), getMyOrders);
 // After
 router.get("/seller", protect, getSellerOrders);
+
 export default router;

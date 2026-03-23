@@ -115,15 +115,42 @@ export const getProductById = async (req, res) => {
   res.json(product);
 };
 
-// Update Product
-export const updateProduct = async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  if (!product) return res.status(404).json({ message: "Product not found" });
-  if (!product.seller.equals(req.user._id)) return res.status(403).json({ message: "Not authorized" });
+// export const updateProduct = async (req, res) => {
+//   const product = await Product.findById(req.params.id);
+//   if (!product) return res.status(404).json({ message: "Product not found" });
+//   if (!product.seller.equals(req.user._id)) return res.status(403).json({ message: "Not authorized" });
 
-  Object.assign(product, req.body);
-  await product.save();
-  res.json(product);
+//   Object.assign(product, req.body);
+//   await product.save();
+//   res.json(product);
+// };
+
+// PUT /api/seller/products/:id
+export const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product.seller.equals(req.user._id))
+      return res.status(403).json({ message: "Not authorized" });
+
+    const { title, description, price, images } = req.body;
+
+    // Update text fields
+    if (title) product.title = title;
+    if (description) product.description = description;
+    if (price) product.price = price;
+
+    // Update images ONLY if a new image is provided
+    if (images && images.length > 0) {
+      product.images = images; // base64 array
+    }
+
+    await product.save();
+    res.json(product);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // Delete Product

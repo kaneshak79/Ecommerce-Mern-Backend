@@ -521,13 +521,29 @@ export const createOrder = async (req, res) => {
 };
 
 // Get Buyer Orders
+// export const getMyOrders = async (req, res) => {
+//   try {
+//     const orders = await Order.find({ buyer: req.user._id })
+//       .populate({
+//         path: "products.product",
+//         select: "title description price images category seller",
+//         match: { _id: { $ne: null } } // only non-null products
+//       })
+//       .sort({ createdAt: -1 });
+
+//     res.json(orders);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ buyer: req.user._id })
       .populate({
         path: "products.product",
-        select: "title description price images category seller",
-        match: { _id: { $ne: null } } // only non-null products
+        select: "title description price images category seller"
       })
       .sort({ createdAt: -1 });
 
@@ -537,6 +553,10 @@ export const getMyOrders = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
+
 
 // Get Seller Orders
 export const getSellerOrders = async (req, res) => {
@@ -572,3 +592,4 @@ export const getAllOrders = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+

@@ -887,44 +887,109 @@ export const getSellerOrders = async (req, res) => {
 // controllers/sellerController.js
 // import Order from "../models/Order.js";
 
-// Update order status for a specific product of the logged-in seller
-export const updateOrderStatus = async (req, res) => {
-  try {
-    const sellerId = req.user._id; // logged-in seller
-    const { orderId, productId } = req.params;
-    const { status } = req.body; // new status e.g., "pending", "shipped", "delivered"
+// // Update order status for a specific product of the logged-in seller
+// export const updateOrderStatus = async (req, res) => {
+//   try {
+//     const sellerId = req.user._id; // logged-in seller
+//     const { orderId, productId } = req.params;
+//     const { status } = req.body; // new status e.g., "pending", "shipped", "delivered"
 
-    // Find the order
+//     // Find the order
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     // Find the product in this order that belongs to this seller
+//     const productItem = order.products.find(
+//       (p) => p._id.toString() === productId && p.seller.toString() === sellerId.toString()
+//     );
+
+//     if (!productItem) return res.status(403).json({ message: "Access denied: not your product" });
+
+//     // Update status
+//     productItem.status = status;
+//     await order.save();
+
+//     res.json({
+//       message: "Product status updated successfully",
+//       orderId,
+//       product: {
+//         _id: productItem._id,
+//         productName: productItem.productName,
+//         status: productItem.status,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error updating order status:", err);
+//     res.status(500).json({ message: "Error updating order status" });
+//   }
+// };
+
+// // Update order status for a specific product of the logged-in seller
+// export const updateOrderStatus = async (req, res) => {
+//   try {
+//     const sellerId = req.user._id; // logged-in seller
+//     const { orderId, productId } = req.params;
+//     const { status } = req.body; // new status e.g., "pending", "shipped", "delivered"
+
+//     // Find the order
+//     const order = await Order.findById(orderId);
+//     if (!order) return res.status(404).json({ message: "Order not found" });
+
+//     // Find the product in this order that belongs to this seller
+//     const productItem = order.products.find(
+//       (p) => p._id.toString() === productId && p.seller.toString() === sellerId.toString()
+//     );
+
+//     if (!productItem) return res.status(403).json({ message: "Access denied: not your product" });
+
+//     // Update status
+//     productItem.status = status;
+//     await order.save();
+
+//     res.json({
+//       message: "Product status updated successfully",
+//       orderId,
+//       product: {
+//         _id: productItem._id,
+//         productName: productItem.productName,
+//         status: productItem.status,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error updating order status:", err);
+//     res.status(500).json({ message: "Error updating order status" });
+//   }
+// };
+
+
+export const updateOrderStatus = async (req, res) => {
+  const { orderId } = req.params; // e.g., /orders/:orderId
+  const { status } = req.body;    // new status: "Shipped", "Delivered", etc.
+
+  try {
     const order = await Order.findById(orderId);
+
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Find the product in this order that belongs to this seller
-    const productItem = order.products.find(
-      (p) => p._id.toString() === productId && p.seller.toString() === sellerId.toString()
-    );
+    // Update main order status
+    order.status = status;
 
-    if (!productItem) return res.status(403).json({ message: "Access denied: not your product" });
+    // Update per-product status
+    order.products.forEach((p) => {
+      p.status = status;
+    });
 
-    // Update status
-    productItem.status = status;
-    await order.save();
+    const updatedOrder = await order.save();
 
     res.json({
-      message: "Product status updated successfully",
-      orderId,
-      product: {
-        _id: productItem._id,
-        productName: productItem.productName,
-        status: productItem.status,
-      },
+      message: "Order updated successfully",
+      order: updatedOrder,
     });
   } catch (err) {
-    console.error("Error updating order status:", err);
-    res.status(500).json({ message: "Error updating order status" });
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
-
-
 
 
 
