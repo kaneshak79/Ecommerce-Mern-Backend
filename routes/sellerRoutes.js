@@ -27,7 +27,8 @@ import {
   getSalesReport,
   getSellerDashboard,
   getSellerProductById,
-  updateSellerProduct
+  updateSellerProduct,
+  deleteSellerProduct
 } from "../controllers/sellerController.js";
 
 const router = express.Router();
@@ -59,5 +60,8 @@ router.put(
   authorizeRoles("seller"),
   updateSellerProduct
 );
+
+// Delete product
+router.delete("/products/:id", protect, authorizeRoles("seller"), deleteSellerProduct);
 
 export default router;

@@ -973,3 +973,24 @@ export const updateSellerProduct = async (req, res) => {
 };
 
 
+// controllers/sellerController.js
+// import Product from "../models/Product.js";
+
+// DELETE /seller/products/:id
+export const deleteSellerProduct = async (req, res) => {
+  try {
+    const sellerId = req.user._id;
+    const { id } = req.params;
+
+    // Find product belonging to this seller
+    const product = await Product.findOne({ _id: id, seller: sellerId });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    await product.deleteOne(); // remove product from DB
+
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    console.error("Delete product error:", err);
+    res.status(500).json({ message: "Failed to delete product" });
+  }
+};
